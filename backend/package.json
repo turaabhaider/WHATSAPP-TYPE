@@ -2,11 +2,10 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
- "scripts": {
-  "start": "node index.js", // Change 'index.js' if your main file is named differently (e.g., server.js)
-  "dev": "nodemon index.js"
+  "main": "index.js","scripts": {
+  "start": "node index.js"
 },
+ 
   "keywords": [],
   "author": "",
   "license": "ISC",
