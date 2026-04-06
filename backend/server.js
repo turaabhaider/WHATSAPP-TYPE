@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const app = express();
 
+// HARDCODED to ensure no "undefined" values break the server
 const allowedOrigins = [
   "http://localhost:5173",
   "https://whatsapp-type-production.up.railway.app"
@@ -16,15 +17,15 @@ app.use(cors({
 
 const PORT = process.env.PORT || 3000;
 
-// Step 1: Define the server
+// Start server first
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// Step 2: Initialize Socket.io using the server defined above
+// Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: allowedOrigins, // Fixed: No more "Invalid value" error
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -33,11 +34,17 @@ const io = new Server(server, {
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+
   socket.on('user_online', (userData) => {
     if (!userData || !userData.id) return;
     const userId = String(userData.id);
     onlineUsers.set(userId, { username: userData.username, socketId: socket.id });
-    const userList = Array.from(onlineUsers.entries()).map(([id, data]) => ({ id, username: data.username }));
+    
+    const userList = Array.from(onlineUsers.entries()).map(([id, data]) => ({ 
+      id, 
+      username: data.username 
+    }));
     io.emit('update_user_list', userList);
   });
 
@@ -60,7 +67,10 @@ io.on('connection', (socket) => {
         break;
       }
     }
-    const userList = Array.from(onlineUsers.entries()).map(([id, data]) => ({ id, username: data.username }));
+    const userList = Array.from(onlineUsers.entries()).map(([id, data]) => ({ 
+      id, 
+      username: data.username 
+    }));
     io.emit('update_user_list', userList);
   });
 });
