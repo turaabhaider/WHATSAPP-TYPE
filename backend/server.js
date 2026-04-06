@@ -1,22 +1,30 @@
 const express = require('express');
-const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 
 const app = express();
-const server = http.createServer(app); // Create the server once
 
-// Set your production frontend URL here
-const FRONTEND_URL = process.env.FRONTEND_URL || "https://whatsapp-type-production.up.railway.app";
+// This allows both your Localhost and your Railway Frontend to connect
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://whatsapp-type-production.up.railway.app"
+];
 
 app.use(cors({
-  origin: FRONTEND_URL,
+  origin: allowedOrigins,
   credentials: true
 }));
 
+// Create the server and start listening immediately
+const PORT = process.env.PORT || 3000;
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+// Attach Socket.io to the running server
 const io = new Server(server, {
   cors: {
-    origin: FRONTEND_URL,
+    origin: allowedOrigins,
     methods: ["GET", "POST"]
   }
 });
@@ -41,6 +49,8 @@ io.on('connection', (socket) => {
       id,
       username: data.username
     }));
+    
+    // Send to EVERYONE so the list updates instantly
     io.emit('update_user_list', userList);
   });
 
@@ -57,7 +67,7 @@ io.on('connection', (socket) => {
 
     if (receiverData) {
       io.to(receiverData.socketId).emit('receive_message', payload);
-      console.log(`Delivered to ${receiverData.username}`);
+      console.log(`Message delivered to ${receiverData.username}`);
     }
   });
 
@@ -69,13 +79,10 @@ io.on('connection', (socket) => {
         break;
       }
     }
-    const userList = Array.from(onlineUsers.entries()).map(([id, data]) => ({ id, username: data.username }));
+    const userList = Array.from(onlineUsers.entries()).map(([id, data]) => ({ 
+      id, 
+      username: data.username 
+    }));
     io.emit('update_user_list', userList);
   });
-});
-
-// START THE SERVER ONLY ONCE
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
 });
