@@ -16,10 +16,6 @@ app.use(cors({
   credentials: true
 }));
 
-const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
 
 // 2. Socket.io CORS Configuration (CRITICAL FIX HERE)
 const io = new Server(server, {
@@ -83,4 +79,9 @@ io.on('connection', (socket) => {
     }));
     io.emit('update_user_list', userList);
   });
+});
+// Ensure this remains in your server.js
+const PORT = process.env.PORT || 3000;
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
