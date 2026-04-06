@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSocket } from '../context/SocketContext';
+import { useSocket } from '../context/SocketProvider';
 
 const ChatWindow = ({ currentUser, activeContact }) => {
     const { socket } = useSocket(); 

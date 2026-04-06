@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSocket } from '../context/SocketContext';
+import { useSocket } from '../context/SocketProvider';
 import { Search } from 'lucide-react';
 
 const Sidebar = ({ currentUser, activeContact, setActiveContact }) => {
