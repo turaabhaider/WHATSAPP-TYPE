@@ -4,25 +4,30 @@ const cors = require('cors');
 
 const app = express();
 
-// Use an array for origins to support both local and production
 const allowedOrigins = [
   "http://localhost:5173",
   "https://whatsapp-type-production.up.railway.app"
 ];
 
-// 1. Express CORS Middleware
 app.use(cors({
   origin: allowedOrigins,
   credentials: true
 }));
 
+// 1. DEFINE THE PORT
+const PORT = process.env.PORT || 3000;
 
-// 2. Socket.io CORS Configuration (CRITICAL FIX HERE)
+// 2. INITIALIZE THE SERVER FIRST (Crucial Step)
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+// 3. NOW ATTACH SOCKET.IO TO THE INITIALIZED SERVER
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
-    credentials: true // This MUST match the frontend withCredentials setting
+    credentials: true
   }
 });
 
@@ -79,9 +84,4 @@ io.on('connection', (socket) => {
     }));
     io.emit('update_user_list', userList);
   });
-});
-// Ensure this remains in your server.js
-const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
 });
