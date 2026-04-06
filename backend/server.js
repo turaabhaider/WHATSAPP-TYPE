@@ -4,18 +4,19 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 
 const app = express();
+const server = http.createServer(app); // Create the server once
 
+// Set your production frontend URL here
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://whatsapp-type-production.up.railway.app";
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  origin: FRONTEND_URL,
   credentials: true
 }));
 
-const server = app.listen(process.env.PORT || 3000);
-
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: FRONTEND_URL,
     methods: ["GET", "POST"]
   }
 });
@@ -29,13 +30,12 @@ io.on('connection', (socket) => {
     if (!userData || !userData.id) return;
     
     const userId = String(userData.id);
-    // Overwrite with latest socket ID
     onlineUsers.set(userId, { 
         username: userData.username, 
         socketId: socket.id 
     });
     
-    console.log(`User Registered: ${userData.username} [ID: ${userId}] on socket ${socket.id}`);
+    console.log(`User Registered: ${userData.username} [ID: ${userId}]`);
 
     const userList = Array.from(onlineUsers.entries()).map(([id, data]) => ({
       id,
@@ -56,11 +56,8 @@ io.on('connection', (socket) => {
     };
 
     if (receiverData) {
-      // Send to the specific receiver
       io.to(receiverData.socketId).emit('receive_message', payload);
-      console.log(`Delivered to ${receiverData.username} (${receiverData.socketId})`);
-    } else {
-      console.log(`FAILED: Receiver ${receiverId} offline.`);
+      console.log(`Delivered to ${receiverData.username}`);
     }
   });
 
@@ -77,6 +74,7 @@ io.on('connection', (socket) => {
   });
 });
 
+// START THE SERVER ONLY ONCE
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
