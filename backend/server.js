@@ -14,15 +14,14 @@ app.use(cors({
   credentials: true
 }));
 
-// 1. DEFINE THE PORT
 const PORT = process.env.PORT || 3000;
 
-// 2. INITIALIZE THE SERVER FIRST (Crucial Step)
+// Step 1: Define the server
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// 3. NOW ATTACH SOCKET.IO TO THE INITIALIZED SERVER
+// Step 2: Initialize Socket.io using the server defined above
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -34,40 +33,23 @@ const io = new Server(server, {
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
-  console.log('New connection:', socket.id);
-
   socket.on('user_online', (userData) => {
     if (!userData || !userData.id) return;
-    
     const userId = String(userData.id);
-    onlineUsers.set(userId, { 
-        username: userData.username, 
-        socketId: socket.id 
-    });
-    
-    console.log(`User Registered: ${userData.username} [ID: ${userId}]`);
-
-    const userList = Array.from(onlineUsers.entries()).map(([id, data]) => ({
-      id,
-      username: data.username
-    }));
-    
+    onlineUsers.set(userId, { username: userData.username, socketId: socket.id });
+    const userList = Array.from(onlineUsers.entries()).map(([id, data]) => ({ id, username: data.username }));
     io.emit('update_user_list', userList);
   });
 
   socket.on('send_message', (data) => {
-    const receiverId = String(data.receiver_id);
-    const receiverData = onlineUsers.get(receiverId);
-
-    const payload = {
-      sender_id: String(data.sender_id),
-      receiver_id: receiverId,
-      text: data.text,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
+    const receiverData = onlineUsers.get(String(data.receiver_id));
     if (receiverData) {
-      io.to(receiverData.socketId).emit('receive_message', payload);
+      io.to(receiverData.socketId).emit('receive_message', {
+        sender_id: String(data.sender_id),
+        receiver_id: String(data.receiver_id),
+        text: data.text,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
     }
   });
 
@@ -78,10 +60,7 @@ io.on('connection', (socket) => {
         break;
       }
     }
-    const userList = Array.from(onlineUsers.entries()).map(([id, data]) => ({ 
-      id, 
-      username: data.username 
-    }));
+    const userList = Array.from(onlineUsers.entries()).map(([id, data]) => ({ id, username: data.username }));
     io.emit('update_user_list', userList);
   });
 });
