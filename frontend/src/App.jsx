@@ -3,7 +3,6 @@ import "./index.css";
 import { SocketProvider } from "./context/SocketProvider";
 import Sidebar from "./components/Sidebar";
 import ChatWindow from "./components/ChatWindow";
-import { socket } from './socket';
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [activeContact, setActiveContact] = useState(null);
