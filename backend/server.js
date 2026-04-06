@@ -4,28 +4,29 @@ const cors = require('cors');
 
 const app = express();
 
-// This allows both your Localhost and your Railway Frontend to connect
+// Use an array for origins to support both local and production
 const allowedOrigins = [
   "http://localhost:5173",
   "https://whatsapp-type-production.up.railway.app"
 ];
 
+// 1. Express CORS Middleware
 app.use(cors({
   origin: allowedOrigins,
   credentials: true
 }));
 
-// Create the server and start listening immediately
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// Attach Socket.io to the running server
+// 2. Socket.io CORS Configuration (CRITICAL FIX HERE)
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
+    credentials: true // This MUST match the frontend withCredentials setting
   }
 });
 
@@ -50,7 +51,6 @@ io.on('connection', (socket) => {
       username: data.username
     }));
     
-    // Send to EVERYONE so the list updates instantly
     io.emit('update_user_list', userList);
   });
 
@@ -67,7 +67,6 @@ io.on('connection', (socket) => {
 
     if (receiverData) {
       io.to(receiverData.socketId).emit('receive_message', payload);
-      console.log(`Message delivered to ${receiverData.username}`);
     }
   });
 
@@ -75,7 +74,6 @@ io.on('connection', (socket) => {
     for (let [id, data] of onlineUsers.entries()) {
       if (data.socketId === socket.id) {
         onlineUsers.delete(id);
-        console.log(`User ${data.username} disconnected.`);
         break;
       }
     }
