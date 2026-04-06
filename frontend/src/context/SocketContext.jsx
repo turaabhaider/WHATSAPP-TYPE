@@ -1,26 +1,34 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
+import React, { createContext, useContext, useEffect } from 'react';
+// Import the socket we already configured in socket.js
+import { socket } from './socket'; 
 
 const SocketContext = createContext();
 export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider = ({ children, userId, username }) => {
-  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:5000');
-    setSocket(newSocket);
+    // Only run this if the socket exists and we have user data
+    if (socket && userId) {
+      
+      const onConnect = () => {
+        console.log("Connected to Railway Backend!");
+        socket.emit('user_online', { id: userId, username: username });
+      };
 
-    newSocket.on('connect', () => {
-      newSocket.emit('user_online', { id: userId, username: username });
-    });
+      // If already connected, emit immediately
+      if (socket.connected) {
+        onConnect();
+      }
 
-    return () => {
-      newSocket.close();
-    };
+      socket.on('connect', onConnect);
+
+      return () => {
+        socket.off('connect', onConnect);
+      };
+    }
   }, [userId, username]);
 
-  // FIX: Passing as an object {{ socket }} so destructuring works
   return (
     <SocketContext.Provider value={{ socket }}>
       {children}
