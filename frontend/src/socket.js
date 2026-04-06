@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-// Hardcoded for production to avoid environment variable build failures
+// HARDCODED - Stop the localhost:5000 errors immediately
 const BACKEND_URL = "https://whatsapp-backend-production-7ada.up.railway.app";
 
 export const socket = io(BACKEND_URL, {
@@ -8,4 +8,4 @@ export const socket = io(BACKEND_URL, {
   transports: ["polling", "websocket"]
 });
 
-console.log("Socket initialized to:", BACKEND_URL);
+console.log("Socket system initialized to:", BACKEND_URL);
